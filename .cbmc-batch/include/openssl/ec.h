@@ -17,6 +17,10 @@ typedef enum {
 
 typedef struct ec_group_st EC_GROUP;
 
+EC_GROUP *EC_GROUP_new_by_curve_name(int nid);
+void EC_GROUP_set_point_conversion_form(EC_GROUP *group, point_conversion_form_t form);
+void EC_GROUP_free(EC_GROUP *group);
+
 typedef struct ECDSA_SIG_st ECDSA_SIG;
 
 EC_KEY *EC_KEY_new(void);

@@ -18,6 +18,35 @@
 #include <proof_helpers/proof_allocators.h>
 #include <proof_helpers/nondet.h>
 
+struct ec_group_st {
+  bool point_conversion_form_is_set;
+};
+
+/*
+ * Description: In order to construct a builtin curve use the function EC_GROUP_new_by_curve_name and provide the nid of the curve to be constructed.
+ * Return values: All EC_GROUP_new* functions return a pointer to the newly constructed group, or NULL on error.
+ */
+EC_GROUP *EC_GROUP_new_by_curve_name(int nid) {
+  EC_GROUP* ec_group = can_fail_malloc(sizeof(EC_GROUP));
+  if (ec_grou) ec_group->point_conversion_form_is_set = false;
+  return ec_group;
+}
+
+/*
+ * Description: The functions EC_GROUP_set_point_conversion_form and EC_GROUP_get_point_conversion_form set and get the point_conversion_form for the curve respectively.
+ */
+void EC_GROUP_set_point_conversion_form(EC_GROUP *group, point_conversion_form_t form) {
+  assert(group);
+  group->point_conversion_form_is_set = true;
+}
+
+/* 
+ * Description: EC_GROUP_free frees the memory associated with the EC_GROUP. If group is NULL nothing is done.
+ */
+void EC_GROUP_free(EC_GROUP *group) {
+  free(group);
+}
+
 struct ec_key_st {
   int references;
 };
