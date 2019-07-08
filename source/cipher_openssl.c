@@ -623,6 +623,12 @@ static int load_pubkey(
     }
 
     *key = EC_KEY_new();
+
+    // key might be null; what's the proper way of handling this error?
+    if (*key == NULL) {
+      abort();
+    }
+
     // We must set the group before decoding, to allow openssl to decompress the point
     EC_KEY_set_group(*key, group);
     EC_KEY_set_conv_form(*key, POINT_CONVERSION_COMPRESSED);
