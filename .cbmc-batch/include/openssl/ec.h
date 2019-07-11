@@ -27,3 +27,5 @@ EC_KEY *EC_KEY_new(void);
 int EC_KEY_set_group(EC_KEY *key, const EC_GROUP *group);
 void EC_KEY_set_conv_form(EC_KEY *eckey, point_conversion_form_t cform);
 void EC_KEY_free(EC_KEY *key);
+
+EC_KEY *o2i_ECPublicKey(EC_KEY **key, const unsigned char **in, long len);

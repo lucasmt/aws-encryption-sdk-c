@@ -51,6 +51,7 @@ struct ec_key_st {
   int references;
   bool group_is_set;
   bool point_conversion_form_is_set;
+  bool pub_key_is_set;
 };
 
 /* Helper function for CBMC proofs: initializes the EC_KEY as nondeterministically as possible. */
@@ -121,4 +122,35 @@ void EC_KEY_free(EC_KEY *key) {
       free(key);
     }
   }
+}
+
+/** Decodes a ec public key from a octet string.
+ *  \param  key  a pointer to a EC_KEY object which should be used
+ *  \param  in   memory buffer with the encoded public key
+ *  \param  len  length of the encoded public key
+ *  \return EC_KEY object with decoded public key or NULL if an error
+ *          occurred.
+ */
+EC_KEY *o2i_ECPublicKey(EC_KEY **key, const unsigned char **in, long len) {
+  assert(in);
+  assert(*in);
+  assert(AWS_MEM_IS_READABLE(*in, len));
+
+  if (key == NULL || (*key) == NULL || !(*key)->group_is_set) {
+    return NULL;
+  }
+
+  // modeling other sources of errors
+  if (nondet_bool()) {
+    return NULL;
+  }
+
+  (*key)->pub_key_is_set = true;
+
+  // in some cases the point conversion form is also set
+  if (nondet_bool()) {
+    (*key)->point_conversion_form_is_set = nondet_bool();
+  }
+  *in += len;
+  return *key;
 }
