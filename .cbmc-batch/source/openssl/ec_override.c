@@ -49,6 +49,8 @@ void EC_GROUP_free(EC_GROUP *group) {
 
 struct ec_key_st {
   int references;
+  bool group_is_set;
+  bool point_conversion_form_is_set;
 };
 
 /* Helper function for CBMC proofs: initializes the EC_KEY as nondeterministically as possible. */
@@ -77,9 +79,36 @@ EC_KEY* EC_KEY_new() {
 
   if (key) {
     key->references = 1;
+    key->group_is_set = false; // no associated curve
+    key->point_conversion_form_is_set = false;
   }
 
   return key;
+}
+
+/*
+ * Description: The function EC_KEY_set_group() sets the EC_GROUP object for the key.
+ * Return values: Returns 1 on success or 0 on error.
+ */
+int EC_KEY_set_group(EC_KEY *key, const EC_GROUP *group) {
+  assert(key);
+
+  if (!group) {
+    return 0;
+  } else {
+    key->group_is_set = nondet_bool(); // can fail for several reasons
+    return key->group_is_set;
+  }
+}
+
+/*
+ * Description: The functions EC_KEY_get_conv_form() and EC_KEY_set_conv_form() get and set the point_conversion_form for the key.
+ */
+void EC_KEY_set_conv_form(EC_KEY *eckey, point_conversion_form_t cform) {
+  assert(eckey);
+  // eckey doesn't need to have a group associated with it
+
+  eckey->point_conversion_form_is_set = true;
 }
 
 /*
