@@ -21,6 +21,7 @@
 /* Abstraction of the EVP_PKEY struct */
 struct evp_pkey_st {
   int references;
+  EC_KEY* ec_key;
 };
 
 /* Helper function for CBMC proofs: initializes PKEY as nondeterministically as possible. */
@@ -55,12 +56,28 @@ EVP_PKEY* EVP_PKEY_new() {
 }
 
 /*
+ * Description: EVP_PKEY_set1_EC_KEY() sets the key referenced by pkey to key.
+ * Return values: EVP_PKEY_set1_EC_KEY() returns 1 for success or 0 for failure.
+ */
+int EVP_PKEY_set1_EC_KEY(EVP_PKEY *pkey, EC_KEY *key) {
+  if (pkey == NULL || key == NULL || nondet_bool()) {
+    return 0;
+  }
+
+  EC_KEY_up_ref(key);
+  pkey->ec_key = key;
+
+  return 1;
+}
+
+/*
  * Description: EVP_PKEY_free() decrements the reference count of key and, if the reference count is zero, frees it up. If key is NULL, nothing is done.
  */
 void EVP_PKEY_free(EVP_PKEY *pkey) {
   if (pkey) {
     --pkey->references;
     if (pkey->references == 0) {
+      EC_KEY_free(pkey->ec_key); // Assuming this happens, unclear from the code and documentation
       free(pkey);
     }
   }
@@ -69,6 +86,7 @@ void EVP_PKEY_free(EVP_PKEY *pkey) {
 /* Abstraction of the EVP_MD_CTX struct */
 struct evp_md_ctx_st {
     bool is_initialized;
+    bool pkey_is_set;
     size_t data_count;
 };
 
@@ -195,6 +213,29 @@ int EVP_DigestFinal_ex(EVP_MD_CTX *ctx, unsigned char *md, unsigned int *s) {
     }
 
     // Additional guarantees?
+}
+
+/*
+ * Description: EVP_DigestVerifyInit() sets up verification context ctx to use digest type from ENGINE e and public key pkey. ctx must be created with EVP_MD_CTX_new() before calling this function. If pctx is not NULL, the EVP_PKEY_CTX of the verification operation will be written to *pctx: this can be used to set alternative verification options. Note that any existing value in *pctx is overwritten. The EVP_PKEY_CTX value returned must not be freed directly by the application if ctx is not assigned an EVP_PKEY_CTX value before being passed to EVP_DigestVerifyInit() (which means the EVP_PKEY_CTX is created inside EVP_DigestVerifyInit() and it will be freed automatically when the EVP_MD_CTX is freed).
+ * Return values: EVP_DigestVerifyInit() EVP_DigestVerifyUpdate() return 1 for success and 0 for failure.
+ */
+int EVP_DigestVerifyInit(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,
+			 const EVP_MD *type, ENGINE *e, EVP_PKEY *pkey) {
+  assert(ctx);
+  assert(!ctx->is_initialized);
+  assert(!pctx); // Assuming that this function is always called in ESDK with pctx == NULL
+  assert(!e); // Assuming that this function is always called in ESDK with e == NULL
+  // Which of these assumptions are actually necessary?
+  assert(type);
+  assert(pkey);
+
+  if (nondet_bool()) {
+    ctx->is_initialized = true;
+    ctx->pkey_is_set = true;
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 /*

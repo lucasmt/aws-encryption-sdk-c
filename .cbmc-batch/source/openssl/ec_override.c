@@ -113,6 +113,22 @@ void EC_KEY_set_conv_form(EC_KEY *eckey, point_conversion_form_t cform) {
 }
 
 /*
+ * Description: EC_KEY_up_ref() increments the reference count associated with the EC_KEY object.
+ * Return values: EC_KEY_up_ref() returns 1 on success or 0 on error.
+ */
+int EC_KEY_up_ref(EC_KEY *key) {
+  assert(key);
+  assert(key->references > 0);
+
+  if (nondet_bool()) {
+    return 0;
+  }
+
+  key->references += 1;
+  return 1;
+}
+
+/*
  * Description: Calling EC_KEY_free() decrements the reference count for the EC_KEY object, and if it has dropped to zero then frees the memory associated with it. If key is NULL nothing is done.
  */
 void EC_KEY_free(EC_KEY *key) {
