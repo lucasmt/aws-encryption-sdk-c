@@ -1,5 +1,6 @@
 #include <stddef.h>
 
+#include <openssl/ec.h>
 #include <openssl/ossl_typ.h>
 
 #define EVP_MAX_MD_SIZE 64/* longest known is SHA512 */
