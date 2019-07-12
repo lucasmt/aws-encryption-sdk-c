@@ -28,7 +28,7 @@ struct ec_group_st {
  */
 EC_GROUP *EC_GROUP_new_by_curve_name(int nid) {
   EC_GROUP* ec_group = can_fail_malloc(sizeof(EC_GROUP));
-  if (ec_grou) ec_group->point_conversion_form_is_set = false;
+  if (ec_group) ec_group->point_conversion_form_is_set = false;
   return ec_group;
 }
 
