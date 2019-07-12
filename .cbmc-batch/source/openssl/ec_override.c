@@ -120,12 +120,8 @@ int EC_KEY_up_ref(EC_KEY *key) {
   assert(key);
   assert(key->references > 0);
 
-  if (nondet_bool()) {
-    return 0;
-  }
-
   key->references += 1;
-  return 1;
+  return 1; // Can we assume that this never fails?
 }
 
 /*
