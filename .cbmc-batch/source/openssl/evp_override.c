@@ -50,6 +50,7 @@ EVP_PKEY* EVP_PKEY_new() {
 
   if (pkey) {
     pkey->references = 1;
+    pkey->ec_key = NULL;
   }
 
   return pkey;
