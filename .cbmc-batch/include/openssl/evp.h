@@ -15,7 +15,6 @@ int EVP_DigestUpdate(EVP_MD_CTX *ctx, const void *d, size_t cnt);
 int EVP_DigestFinal_ex(EVP_MD_CTX *ctx, unsigned char *md, unsigned int *s);
 int EVP_DigestVerifyInit(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,
 			 const EVP_MD *type, ENGINE *e, EVP_PKEY *pkey);
-const EVP_MD *EVP_sha512();
 
 #define EVP_MD_CTX_create()     EVP_MD_CTX_new()
 #define EVP_MD_CTX_destroy(ctx) EVP_MD_CTX_free((ctx))
@@ -25,6 +24,7 @@ const EVP_CIPHER *EVP_aes_192_gcm(void);
 const EVP_CIPHER *EVP_aes_256_gcm(void);
 const EVP_MD *EVP_sha256(void);
 const EVP_MD *EVP_sha384(void);
+const EVP_MD *EVP_sha512(void);
 
 # define         EVP_CTRL_INIT                   0x0
 # define         EVP_CTRL_SET_KEY_LENGTH         0x1

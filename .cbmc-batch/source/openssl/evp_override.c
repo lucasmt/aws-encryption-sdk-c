@@ -91,11 +91,6 @@ struct evp_md_ctx_st {
     size_t data_count;
 };
 
-/* Abstraction of the EVP_MD struct */
-struct evp_md_st {
-    bool is_sha512;
-};
-
 bool evp_md_ctx_is_valid(EVP_MD_CTX *ctx) {
     return ctx && ctx->is_initialized && ctx->data_count <= EVP_MAX_MD_SIZE;
 }
@@ -149,8 +144,7 @@ void EVP_MD_CTX_free(EVP_MD_CTX *ctx) {
 int EVP_DigestInit_ex(EVP_MD_CTX *ctx, const EVP_MD *type, ENGINE *impl) {
     assert(ctx != NULL);
     assert(!ctx->is_initialized);  // can a ctx be initialized twice?
-    assert(type != NULL);
-    assert(type->is_sha512);
+    assert(evp_md_is_valid(type));
     // impl can be NULL
 
     // Additional assumptions?
@@ -239,13 +233,67 @@ int EVP_DigestVerifyInit(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,
   }
 }
 
+enum evp_aes {
+  EVP_AES_128_GCM,
+  EVP_AES_192_GCM,
+  EVP_AES_256_GCM
+};
+
+/* Abstraction of the EVP_CIPHER struct */
+struct evp_cipher_st {
+  enum evp_aes from;
+};
+
+bool evp_cipher_is_valid(EVP_CIPHER *type) {
+  return type && (type->from == EVP_AES_128_GCM || type->from == EVP_AES_192_GCM || type->from == EVP_AES_256_GCM);
+}
+
 /*
- * Description: The SHA-512 algorithm, which generates 512 bits of output from a given input.
+ * Description: AES for 128, 192 and 256 bit keys in Galois Counter Mode (GCM). These ciphers require additional control operations to function correctly, see the "AEAD Interface" in EVP_EncryptInit(3) section for details.
+ * Return values: These functions return an EVP_CIPHER structure that contains the implementation of the symmetric cipher.
+ */
+const EVP_CIPHER *EVP_aes_128_gcm(void) {
+  static const EVP_CIPHER cipher = { EVP_AES_128_GCM };
+  return &cipher;
+}
+const EVP_CIPHER *EVP_aes_192_gcm(void) {
+  static const EVP_CIPHER cipher = { EVP_AES_192_GCM };
+  return &cipher;
+}
+const EVP_CIPHER *EVP_aes_256_gcm(void) {
+  static const EVP_CIPHER cipher = { EVP_AES_256_GCM };
+  return &cipher;
+}
+
+enum evp_sha {
+  EVP_SHA256,
+  EVP_SHA384,
+  EVP_SHA512
+};
+
+/* Abstraction of the EVP_MD struct */
+struct evp_md_st {
+  enum evp_sha from;
+};
+
+bool evp_md_is_valid(EVP_MD* type) {
+  return type && (type->from == EVP_SHA256 || type->from == EVP_SHA384 || type->from == EVP_SHA512);
+}
+
+/*
+ * Description: The SHA-2 SHA-224, SHA-256, SHA-512/224, SHA512/256, SHA-384 and SHA-512 algorithms, which generate 224, 256, 224, 256, 384 and 512 bits respectively of output from a given input.
  * Return values: These functions return a EVP_MD structure that contains the implementation of the symmetric
  * cipher.
  */
+const EVP_MD *EVP_sha256() {
+  static const EVP_MD md = { EVP_SHA256 };
+  return &md;
+}
+const EVP_MD *EVP_sha384() {
+  static const EVP_MD md = { EVP_SHA384 };
+  return &md;
+}
 const EVP_MD *EVP_sha512() {
-    static const EVP_MD md = { true };
-    // OpenSSL implementation returns the address of a static struct
+    static const EVP_MD md = { EVP_SHA512 };
     return &md;
 }
