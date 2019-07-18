@@ -20,40 +20,41 @@
 
 /* Abstraction of the EVP_PKEY struct */
 struct evp_pkey_st {
-  int references;
-  EC_KEY* ec_key;
+    int references;
+    EC_KEY *ec_key;
 };
 
 /* Helper function for CBMC proofs: initializes PKEY as nondeterministically as possible. */
-void evp_pkey_nondet_init(EVP_PKEY* pkey) {
-  int new_reference_count;
-  __CPROVER_assume(new_reference_count > 0);
-  pkey->references = new_reference_count;
+void evp_pkey_nondet_init(EVP_PKEY *pkey) {
+    int new_reference_count;
+    __CPROVER_assume(new_reference_count > 0);
+    pkey->references = new_reference_count;
 }
 
 /* Helper function for CBMC proofs: returns the reference count. */
-int evp_pkey_get_reference_count(EVP_PKEY* pkey) {
-  return pkey ? pkey->references : 0;
+int evp_pkey_get_reference_count(EVP_PKEY *pkey) {
+    return pkey ? pkey->references : 0;
 }
 
 /* Helper function for CBMC proofs: frees the memory regardless of the reference count. */
-void evp_pkey_unconditional_free(EVP_PKEY* pkey) {
-  free(pkey);
+void evp_pkey_unconditional_free(EVP_PKEY *pkey) {
+    free(pkey);
 }
 
 /*
- * Description: The EVP_PKEY_new() function allocates an empty EVP_PKEY structure which is used by OpenSSL to store public and private keys. The reference count is set to 1.
- * Return values: EVP_PKEY_new() returns either the newly allocated EVP_PKEY structure or NULL if an error occurred.
+ * Description: The EVP_PKEY_new() function allocates an empty EVP_PKEY structure which is used by OpenSSL to store
+ * public and private keys. The reference count is set to 1. Return values: EVP_PKEY_new() returns either the newly
+ * allocated EVP_PKEY structure or NULL if an error occurred.
  */
-EVP_PKEY* EVP_PKEY_new() {
-  EVP_PKEY* pkey = can_fail_malloc(sizeof(EVP_PKEY));
+EVP_PKEY *EVP_PKEY_new() {
+    EVP_PKEY *pkey = can_fail_malloc(sizeof(EVP_PKEY));
 
-  if (pkey) {
-    pkey->references = 1;
-    pkey->ec_key = NULL;
-  }
+    if (pkey) {
+        pkey->references = 1;
+        pkey->ec_key     = NULL;
+    }
 
-  return pkey;
+    return pkey;
 }
 
 /*
@@ -61,27 +62,28 @@ EVP_PKEY* EVP_PKEY_new() {
  * Return values: EVP_PKEY_set1_EC_KEY() returns 1 for success or 0 for failure.
  */
 int EVP_PKEY_set1_EC_KEY(EVP_PKEY *pkey, EC_KEY *key) {
-  if (pkey == NULL || key == NULL || nondet_bool()) {
-    return 0;
-  }
+    if (pkey == NULL || key == NULL || nondet_bool()) {
+        return 0;
+    }
 
-  EC_KEY_up_ref(key);
-  pkey->ec_key = key;
+    EC_KEY_up_ref(key);
+    pkey->ec_key = key;
 
-  return 1;
+    return 1;
 }
 
 /*
- * Description: EVP_PKEY_free() decrements the reference count of key and, if the reference count is zero, frees it up. If key is NULL, nothing is done.
+ * Description: EVP_PKEY_free() decrements the reference count of key and, if the reference count is zero, frees it up.
+ * If key is NULL, nothing is done.
  */
 void EVP_PKEY_free(EVP_PKEY *pkey) {
-  if (pkey) {
-    --pkey->references;
-    if (pkey->references == 0) {
-      EC_KEY_free(pkey->ec_key); // Assuming this happens, unclear from the code and documentation
-      free(pkey);
+    if (pkey) {
+        --pkey->references;
+        if (pkey->references == 0) {
+            EC_KEY_free(pkey->ec_key);  // Assuming this happens, unclear from the code and documentation
+            free(pkey);
+        }
     }
-  }
 }
 
 /* Abstraction of the EVP_MD_CTX struct */
@@ -165,7 +167,7 @@ int EVP_DigestUpdate(EVP_MD_CTX *ctx, const void *d, size_t cnt) {
     assert(evp_md_ctx_is_valid(ctx));
     assert(d != NULL);  // is this a hard requirement?
     assert(AWS_MEM_IS_READABLE(d, cnt));
-    assert(ctx->data_count + cnt <= EVP_MAX_MD_SIZE); // should we assume this? what happens otherwise?
+    assert(ctx->data_count + cnt <= EVP_MAX_MD_SIZE);  // should we assume this? what happens otherwise?
 
     // Additional assumptions?
 
@@ -211,87 +213,96 @@ int EVP_DigestFinal_ex(EVP_MD_CTX *ctx, unsigned char *md, unsigned int *s) {
 }
 
 /*
- * Description: EVP_DigestVerifyInit() sets up verification context ctx to use digest type from ENGINE e and public key pkey. ctx must be created with EVP_MD_CTX_new() before calling this function. If pctx is not NULL, the EVP_PKEY_CTX of the verification operation will be written to *pctx: this can be used to set alternative verification options. Note that any existing value in *pctx is overwritten. The EVP_PKEY_CTX value returned must not be freed directly by the application if ctx is not assigned an EVP_PKEY_CTX value before being passed to EVP_DigestVerifyInit() (which means the EVP_PKEY_CTX is created inside EVP_DigestVerifyInit() and it will be freed automatically when the EVP_MD_CTX is freed).
- * Return values: EVP_DigestVerifyInit() EVP_DigestVerifyUpdate() return 1 for success and 0 for failure.
+ * Description: EVP_DigestVerifyInit() sets up verification context ctx to use digest type from ENGINE e and public key
+ * pkey. ctx must be created with EVP_MD_CTX_new() before calling this function. If pctx is not NULL, the EVP_PKEY_CTX
+ * of the verification operation will be written to *pctx: this can be used to set alternative verification options.
+ * Note that any existing value in *pctx is overwritten. The EVP_PKEY_CTX value returned must not be freed directly by
+ * the application if ctx is not assigned an EVP_PKEY_CTX value before being passed to EVP_DigestVerifyInit() (which
+ * means the EVP_PKEY_CTX is created inside EVP_DigestVerifyInit() and it will be freed automatically when the
+ * EVP_MD_CTX is freed). Return values: EVP_DigestVerifyInit() EVP_DigestVerifyUpdate() return 1 for success and 0 for
+ * failure.
  */
-int EVP_DigestVerifyInit(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,
-			 const EVP_MD *type, ENGINE *e, EVP_PKEY *pkey) {
-  assert(ctx);
-  assert(!ctx->is_initialized);
-  assert(!pctx); // Assuming that this function is always called in ESDK with pctx == NULL
-  assert(!e); // Assuming that this function is always called in ESDK with e == NULL
-  // Which of these assumptions are actually necessary?
-  assert(type);
-  assert(pkey);
+int EVP_DigestVerifyInit(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx, const EVP_MD *type, ENGINE *e, EVP_PKEY *pkey) {
+    assert(ctx);
+    assert(!ctx->is_initialized);
+    assert(!pctx);  // Assuming that this function is always called in ESDK with pctx == NULL
+    assert(!e);     // Assuming that this function is always called in ESDK with e == NULL
+    // Which of these assumptions are actually necessary?
+    assert(type);
+    assert(pkey);
 
-  if (nondet_bool()) {
-    ctx->is_initialized = true;
-    ctx->pkey_is_set = true;
-    return 1;
-  } else {
-    return 0;
-  }
+    if (nondet_bool()) {
+        ctx->is_initialized = true;
+        ctx->pkey_is_set    = true;
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
-enum evp_aes {
-  EVP_AES_128_GCM,
-  EVP_AES_192_GCM,
-  EVP_AES_256_GCM
-};
+/*
+ * Description: EVP_DigestVerifyFinal() verifies the data in ctx against the signature in sig of length siglen.
+ * Return values: EVP_DigestVerifyFinal() and EVP_DigestVerify() return 1 for success; any other value indicates
+ * failure. A return value of zero indicates that the signature did not verify successfully (that is, tbs did not match
+ * the original data or the signature had an invalid form), while other values indicate a more serious error (and
+ * sometimes also indicate an invalid signature form).
+ */
+int EVP_DigestVerifyFinal(EVP_MD_CTX *ctx, const unsigned char *sig, size_t siglen) {
+    return nondet_int();
+}
+
+enum evp_aes { EVP_AES_128_GCM, EVP_AES_192_GCM, EVP_AES_256_GCM };
 
 /* Abstraction of the EVP_CIPHER struct */
 struct evp_cipher_st {
-  enum evp_aes from;
+    enum evp_aes from;
 };
 
 bool evp_cipher_is_valid(EVP_CIPHER *type) {
-  return type && (type->from == EVP_AES_128_GCM || type->from == EVP_AES_192_GCM || type->from == EVP_AES_256_GCM);
+    return type && (type->from == EVP_AES_128_GCM || type->from == EVP_AES_192_GCM || type->from == EVP_AES_256_GCM);
 }
 
 /*
- * Description: AES for 128, 192 and 256 bit keys in Galois Counter Mode (GCM). These ciphers require additional control operations to function correctly, see the "AEAD Interface" in EVP_EncryptInit(3) section for details.
- * Return values: These functions return an EVP_CIPHER structure that contains the implementation of the symmetric cipher.
+ * Description: AES for 128, 192 and 256 bit keys in Galois Counter Mode (GCM). These ciphers require additional control
+ * operations to function correctly, see the "AEAD Interface" in EVP_EncryptInit(3) section for details. Return values:
+ * These functions return an EVP_CIPHER structure that contains the implementation of the symmetric cipher.
  */
 const EVP_CIPHER *EVP_aes_128_gcm(void) {
-  static const EVP_CIPHER cipher = { EVP_AES_128_GCM };
-  return &cipher;
+    static const EVP_CIPHER cipher = { EVP_AES_128_GCM };
+    return &cipher;
 }
 const EVP_CIPHER *EVP_aes_192_gcm(void) {
-  static const EVP_CIPHER cipher = { EVP_AES_192_GCM };
-  return &cipher;
+    static const EVP_CIPHER cipher = { EVP_AES_192_GCM };
+    return &cipher;
 }
 const EVP_CIPHER *EVP_aes_256_gcm(void) {
-  static const EVP_CIPHER cipher = { EVP_AES_256_GCM };
-  return &cipher;
+    static const EVP_CIPHER cipher = { EVP_AES_256_GCM };
+    return &cipher;
 }
 
-enum evp_sha {
-  EVP_SHA256,
-  EVP_SHA384,
-  EVP_SHA512
-};
+enum evp_sha { EVP_SHA256, EVP_SHA384, EVP_SHA512 };
 
 /* Abstraction of the EVP_MD struct */
 struct evp_md_st {
-  enum evp_sha from;
+    enum evp_sha from;
 };
 
-bool evp_md_is_valid(EVP_MD* type) {
-  return type && (type->from == EVP_SHA256 || type->from == EVP_SHA384 || type->from == EVP_SHA512);
+bool evp_md_is_valid(EVP_MD *type) {
+    return type && (type->from == EVP_SHA256 || type->from == EVP_SHA384 || type->from == EVP_SHA512);
 }
 
 /*
- * Description: The SHA-2 SHA-224, SHA-256, SHA-512/224, SHA512/256, SHA-384 and SHA-512 algorithms, which generate 224, 256, 224, 256, 384 and 512 bits respectively of output from a given input.
- * Return values: These functions return a EVP_MD structure that contains the implementation of the symmetric
- * cipher.
+ * Description: The SHA-2 SHA-224, SHA-256, SHA-512/224, SHA512/256, SHA-384 and SHA-512 algorithms, which generate 224,
+ * 256, 224, 256, 384 and 512 bits respectively of output from a given input. Return values: These functions return a
+ * EVP_MD structure that contains the implementation of the symmetric cipher.
  */
 const EVP_MD *EVP_sha256() {
-  static const EVP_MD md = { EVP_SHA256 };
-  return &md;
+    static const EVP_MD md = { EVP_SHA256 };
+    return &md;
 }
 const EVP_MD *EVP_sha384() {
-  static const EVP_MD md = { EVP_SHA384 };
-  return &md;
+    static const EVP_MD md = { EVP_SHA384 };
+    return &md;
 }
 const EVP_MD *EVP_sha512() {
     static const EVP_MD md = { EVP_SHA512 };
