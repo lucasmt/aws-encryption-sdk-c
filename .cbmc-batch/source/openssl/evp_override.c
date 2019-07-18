@@ -248,6 +248,9 @@ int EVP_DigestVerifyInit(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx, const EVP_MD *typ
  * sometimes also indicate an invalid signature form).
  */
 int EVP_DigestVerifyFinal(EVP_MD_CTX *ctx, const unsigned char *sig, size_t siglen) {
+    assert(ctx);
+    assert(sig);
+
     return nondet_int();
 }
 
