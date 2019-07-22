@@ -50,6 +50,7 @@ const struct aws_cryptosdk_alg_properties *aws_cryptosdk_alg_props(enum aws_cryp
             .alg_id          = (alg_id_v),                                                                     \
             .signature_len   = (signature_len_v)                                                               \
         };                                                                                                     \
+	struct aws_cryptosdk_alg_impl* debug_impl = &impl; \
         return &props;                                                                                         \
     }
     switch (alg_id) {
