@@ -45,6 +45,10 @@ enum aws_cryptosdk_rsa_padding_mode {
     AWS_CRYPTOSDK_RSA_OAEP_SHA256_MGF1,
 };
 
+/* This is large enough to hold an encoded public key for all currently supported curves */
+#define MAX_PUBKEY_SIZE 64
+#define MAX_PUBKEY_SIZE_B64 (((MAX_PUBKEY_SIZE + 2) * 4) / 3)
+
 /**
  * This structure contains information about a particular algorithm suite used
  * within the encryption SDK.  In most cases, end-users don't need to
@@ -105,6 +109,12 @@ const struct aws_cryptosdk_alg_properties *aws_cryptosdk_alg_props(enum aws_cryp
  * An opaque structure representing an ongoing sign or verify operation
  */
 struct aws_cryptosdk_sig_ctx;
+
+/**
+ * Performs basic validity checks for the signing context (e.g. that member pointers are not NULL).
+ */
+AWS_CRYPTOSDK_API
+bool aws_cryptosdk_sig_ctx_is_valid(const struct aws_cryptosdk_sig_ctx *sig_ctx);
 
 /**
  * Obtains the private key from a signing context, and serializes it to a byte buffer.
